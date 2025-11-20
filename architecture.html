@@ -116,6 +116,82 @@
             <h2>Weather Application Architecture</h2>
             <p>This live weather application demonstrates WebSockets in a practical context. Here's how it works:</p>
 
+            <div class="diagram">
+                <svg viewBox="0 0 650 450" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+                    <!-- Client Browser -->
+                    <rect x="40" y="40" width="140" height="90" rx="8" fill="#e8e8e8" stroke="#888" stroke-width="2"/>
+                    <text x="110" y="65" text-anchor="middle" font-size="15" font-weight="bold" fill="#5B9BD5">Client Browser</text>
+                    <text x="110" y="85" text-anchor="middle" font-size="12" fill="#444">HTML + JavaScript</text>
+                    <text x="110" y="105" text-anchor="middle" font-size="11" fill="#666">Socket.io Client</text>
+                    
+                    <!-- Server -->
+                    <rect x="280" y="40" width="140" height="90" rx="8" fill="#e8e8e8" stroke="#888" stroke-width="2"/>
+                    <text x="350" y="65" text-anchor="middle" font-size="15" font-weight="bold" fill="#5B9BD5">Server</text>
+                    <text x="350" y="85" text-anchor="middle" font-size="12" fill="#444">Node.js + Express</text>
+                    <text x="350" y="105" text-anchor="middle" font-size="11" fill="#666">Socket.io Server</text>
+                    
+                    <!-- Weather API -->
+                    <rect x="520" y="180" width="120" height="90" rx="8" fill="#f5f5f5" stroke="#888" stroke-width="2"/>
+                    <text x="580" y="205" text-anchor="middle" font-size="15" font-weight="bold" fill="#5B9BD5">Weather API</text>
+                    <text x="580" y="225" text-anchor="middle" font-size="12" fill="#444">Open-Meteo</text>
+                    <text x="580" y="245" text-anchor="middle" font-size="11" fill="#666">External Service</text>
+                    
+                    <!-- WebSocket Connection (Bidirectional) -->
+                    <path d="M 180 85 L 280 85" stroke="#5B9BD5" stroke-width="3" fill="none" marker-end="url(#arrowWS)"/>
+                    <text x="230" y="75" text-anchor="middle" font-size="12" fill="#5B9BD5" font-weight="bold">WebSocket</text>
+                    <text x="230" y="100" text-anchor="middle" font-size="10" fill="#666">Bidirectional</text>
+                    
+                    <!-- Server to Weather API -->
+                    <path d="M 420 85 L 550 210" stroke="#888" stroke-width="2" fill="none" marker-end="url(#arrowAPI)"/>
+                    <text x="495" y="140" font-size="10" fill="#666">HTTPS</text>
+                    
+                    <!-- Response from API -->
+                    <path d="M 520 225 L 410 110 L 420 85" stroke="#888" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowAPI)"/>
+                    <text x="460" y="160" font-size="10" fill="#666">JSON Response</text>
+                    
+                    <!-- Room Groups Container -->
+                    <rect x="50" y="200" width="550" height="200" rx="8" fill="#ffffff" stroke="#888" stroke-width="2" stroke-dasharray="5,5"/>
+                    <text x="325" y="230" text-anchor="middle" font-size="14" font-weight="bold" fill="#5B9BD5">Socket.io Rooms (Message Groups)</text>
+                    
+                    <!-- London Room -->
+                    <rect x="90" y="250" width="120" height="70" rx="6" fill="#e8e8e8" stroke="#888" stroke-width="2"/>
+                    <text x="150" y="275" text-anchor="middle" font-size="13" font-weight="bold" fill="#444">London</text>
+                    <circle cx="130" cy="295" r="4" fill="#5B9BD5"/>
+                    <circle cx="150" cy="295" r="4" fill="#5B9BD5"/>
+                    <circle cx="170" cy="295" r="4" fill="#5B9BD5"/>
+                    <text x="150" y="310" text-anchor="middle" font-size="10" fill="#666">3 clients</text>
+                    
+                    <!-- New York Room -->
+                    <rect x="240" y="250" width="120" height="70" rx="6" fill="#e8e8e8" stroke="#888" stroke-width="2"/>
+                    <text x="300" y="275" text-anchor="middle" font-size="13" font-weight="bold" fill="#444">New York</text>
+                    <circle cx="280" cy="295" r="4" fill="#5B9BD5"/>
+                    <circle cx="300" cy="295" r="4" fill="#5B9BD5"/>
+                    <text x="300" y="310" text-anchor="middle" font-size="10" fill="#666">2 clients</text>
+                    
+                    <!-- Tokyo Room -->
+                    <rect x="390" y="250" width="120" height="70" rx="6" fill="#e8e8e8" stroke="#888" stroke-width="2"/>
+                    <text x="450" y="275" text-anchor="middle" font-size="13" font-weight="bold" fill="#444">Tokyo</text>
+                    <circle cx="430" cy="295" r="4" fill="#5B9BD5"/>
+                    <circle cx="450" cy="295" r="4" fill="#5B9BD5"/>
+                    <text x="450" y="310" text-anchor="middle" font-size="10" fill="#666">2 clients</text>
+                    
+                    <!-- Update flow arrow -->
+                    <path d="M 350 130 L 150 250" stroke="#5B9BD5" stroke-width="2.5" fill="none" marker-end="url(#arrowWS)" stroke-dasharray="4,4"/>
+                    <text x="240" y="185" text-anchor="middle" font-size="11" fill="#5B9BD5" font-weight="500" font-style="italic">Room Updates</text>
+                    
+                    <!-- Arrow definitions -->
+                    <defs>
+                        <marker id="arrowWS" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#5B9BD5"/>
+                        </marker>
+                        <marker id="arrowAPI" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#888"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            <p class="note"><em>Architecture diagram showing client-server communication via WebSockets, room-based message distribution, and external weather API integration.</em></p>
+
             <h3>System Components</h3>
             <table>
                 <thead>
@@ -157,6 +233,97 @@
 
         <div class="card">
             <h2>Application Flow</h2>
+            
+            <div class="diagram">
+                <svg viewBox="0 0 700 500" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+                    <!-- Sequence Diagram Title -->
+                    <text x="350" y="25" text-anchor="middle" font-size="14" font-weight="bold" fill="#444">Sequence Diagram: WebSocket Communication Flow</text>
+                    
+                    <!-- Lifelines (vertical lines) -->
+                    <line x1="150" y1="50" x2="150" y2="480" stroke="#888" stroke-width="2"/>
+                    <line x1="350" y1="50" x2="350" y2="480" stroke="#888" stroke-width="2"/>
+                    <line x1="550" y1="50" x2="550" y2="480" stroke="#888" stroke-width="2"/>
+                    
+                    <!-- Actors (top boxes) -->
+                    <rect x="80" y="50" width="140" height="50" rx="4" fill="#e8e8e8" stroke="#888" stroke-width="2"/>
+                    <text x="150" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#5B9BD5">Client Browser</text>
+                    <text x="150" y="90" text-anchor="middle" font-size="10" fill="#666">Socket.io Client</text>
+                    
+                    <rect x="280" y="50" width="140" height="50" rx="4" fill="#e8e8e8" stroke="#888" stroke-width="2"/>
+                    <text x="350" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#5B9BD5">WebSocket Server</text>
+                    <text x="350" y="90" text-anchor="middle" font-size="10" fill="#666">Node.js + Socket.io</text>
+                    
+                    <rect x="480" y="50" width="140" height="50" rx="4" fill="#f5f5f5" stroke="#888" stroke-width="2"/>
+                    <text x="550" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#5B9BD5">Weather API</text>
+                    <text x="550" y="90" text-anchor="middle" font-size="10" fill="#666">Open-Meteo</text>
+                    
+                    <!-- Step 1: WebSocket Connection -->
+                    <path d="M 150 130 L 350 130" stroke="#5B9BD5" stroke-width="2" fill="none" marker-end="url(#arrowWS)"/>
+                    <text x="250" y="125" text-anchor="middle" font-size="10" fill="#5B9BD5" font-weight="bold">1. WebSocket Handshake</text>
+                    
+                    <!-- Activation box for connection -->
+                    <rect x="145" y="120" width="10" height="20" fill="#5B9BD5" opacity="0.3"/>
+                    <rect x="345" y="120" width="10" height="20" fill="#5B9BD5" opacity="0.3"/>
+                    
+                    <!-- Step 2: Connection established -->
+                    <path d="M 350 150 L 150 150" stroke="#5B9BD5" stroke-width="2" fill="none" stroke-dasharray="4,4" marker-end="url(#arrowWS)"/>
+                    <text x="250" y="155" text-anchor="middle" font-size="10" fill="#5B9BD5">2. Connection Established</text>
+                    
+                    <!-- Step 3: Subscribe to city -->
+                    <path d="M 150 200 L 350 200" stroke="#5B9BD5" stroke-width="2" fill="none" marker-end="url(#arrowWS)"/>
+                    <text x="250" y="195" text-anchor="middle" font-size="10" fill="#5B9BD5" font-weight="bold">3. subscribe_city("London")</text>
+                    
+                    <!-- Activation for subscription -->
+                    <rect x="145" y="190" width="10" height="30" fill="#5B9BD5" opacity="0.3"/>
+                    <rect x="345" y="190" width="10" height="30" fill="#5B9BD5" opacity="0.3"/>
+                    
+                    <!-- Step 4: Join room -->
+                    <text x="370" y="215" font-size="9" fill="#666" font-style="italic">→ Joins "London" room</text>
+                    
+                    <!-- Step 5: Fetch weather from API -->
+                    <path d="M 350 250 L 550 250" stroke="#888" stroke-width="2" fill="none" marker-end="url(#arrowAPI)"/>
+                    <text x="450" y="245" text-anchor="middle" font-size="10" fill="#888" font-weight="bold">4. Fetch Weather Data</text>
+                    
+                    <!-- Activation for API call -->
+                    <rect x="345" y="240" width="10" height="30" fill="#888" opacity="0.2"/>
+                    <rect x="545" y="240" width="10" height="30" fill="#888" opacity="0.2"/>
+                    
+                    <!-- Step 6: API Response -->
+                    <path d="M 550 280 L 350 280" stroke="#888" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowAPI)"/>
+                    <text x="450" y="275" text-anchor="middle" font-size="10" fill="#888">5. JSON Response (temp: 15°C)</text>
+                    
+                    <!-- Step 7: Send update to client -->
+                    <path d="M 350 320 L 150 320" stroke="#5B9BD5" stroke-width="2" fill="none" marker-end="url(#arrowWS)"/>
+                    <text x="250" y="315" text-anchor="middle" font-size="10" fill="#5B9BD5" font-weight="bold">6. temperature_update</text>
+                    <text x="250" y="330" text-anchor="middle" font-size="9" fill="#666">{"city": "London", "temp": 15}</text>
+                    
+                    <!-- Periodic updates section -->
+                    <line x1="50" y1="370" x2="650" y2="370" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+                    <text x="350" y="365" text-anchor="middle" font-size="9" fill="#999" font-style="italic">... (every 5 minutes) ...</text>
+                    
+                    <!-- Step 8: Periodic update -->
+                    <path d="M 350 390 L 550 390" stroke="#888" stroke-width="2" fill="none" marker-end="url(#arrowAPI)"/>
+                    <text x="450" y="385" text-anchor="middle" font-size="10" fill="#888">7. Periodic Fetch</text>
+                    
+                    <path d="M 550 410 L 350 410" stroke="#888" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowAPI)"/>
+                    <text x="450" y="405" text-anchor="middle" font-size="10" fill="#888">8. Updated Data</text>
+                    
+                    <path d="M 350 440 L 150 440" stroke="#5B9BD5" stroke-width="2" fill="none" marker-end="url(#arrowWS)"/>
+                    <text x="250" y="435" text-anchor="middle" font-size="10" fill="#5B9BD5" font-weight="bold">9. Broadcast to Room</text>
+                    <text x="250" y="450" text-anchor="middle" font-size="9" fill="#666">All clients in "London" room</text>
+                    
+                    <!-- Arrow definitions -->
+                    <defs>
+                        <marker id="arrowWS" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L7,3 z" fill="#5B9BD5"/>
+                        </marker>
+                        <marker id="arrowAPI" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L7,3 z" fill="#888"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+            <p class="note"><em>Sequence diagram showing the chronological flow of messages between client, server, and weather API. Time flows downward, and activation boxes show when components are actively processing.</em></p>
             
             <h3>Step 1: Server Initialization</h3>
             <pre><code>const express = require('express');

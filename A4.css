@@ -129,10 +129,22 @@ tfoot td {
 .diagram {
     display: flex;
     justify-content: center;
-    margin: 12px auto;
-    padding: 10px 12px;
-    overflow: visible;
-    height: 100px;
+    align-items: center;
+    margin: 20px auto;
+    padding: 20px 25px;
+    overflow: hidden;
+    width: calc(100% - 50px);
+    max-width: calc(100% - 50px);
+    min-height: 200px;
+    box-sizing: border-box;
+}
+
+.diagram svg {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    max-height: 600px;
+    display: block;
 }
 
 .small {
@@ -195,40 +207,6 @@ pre code {
     color: #444444;
 }
 
-/* Conditional fills: nested containers inside light gray should be white */
-.fact .fact,
-.fact .card,
-.fact .stat,
-.fact pre,
-.fact table tbody tr:nth-child(odd),
-.fact table tbody tr:nth-child(even),
-.card .fact,
-.card .card,
-.card .stat,
-.card pre,
-.card table tbody tr:nth-child(odd),
-.card table tbody tr:nth-child(even),
-.stat .fact,
-.stat .card,
-.stat .stat,
-.stat pre,
-.stat table tbody tr:nth-child(odd),
-.stat table tbody tr:nth-child(even),
-.citations .fact,
-.citations .card,
-.citations .stat,
-.citations pre,
-.citations table tbody tr:nth-child(odd),
-.citations table tbody tr:nth-child(even),
-.timeline-content .fact,
-.timeline-content .card,
-.timeline-content .stat,
-.timeline-content pre,
-.timeline-content table tbody tr:nth-child(odd),
-.timeline-content table tbody tr:nth-child(even) {
-    background: #ffffff;
-}
-
 /* When parent is white, child tables should have white and light gray alternate fills */
 .a4 table tbody tr:nth-child(odd),
 body table tbody tr:nth-child(odd) {
@@ -243,6 +221,37 @@ body table tbody tr:nth-child(even) {
 .a4 pre,
 body pre {
     background: #F7F7F7;
+}
+
+/* Conditional fills: nested containers inside light gray should be white */
+/* This must come AFTER general pre rules to override them */
+/* Note: Table rows maintain their alternate coloring even inside gray parents */
+.fact .fact,
+.fact .card,
+.fact .stat,
+.fact pre,
+.fact .timeline-content,
+.card .fact,
+.card .card,
+.card .stat,
+.card pre,
+.card .timeline-content,
+.stat .fact,
+.stat .card,
+.stat .stat,
+.stat pre,
+.stat .timeline-content,
+.citations .fact,
+.citations .card,
+.citations .stat,
+.citations pre,
+.citations .timeline-content,
+.timeline-content .fact,
+.timeline-content .card,
+.timeline-content .stat,
+.timeline-content pre,
+.timeline-content .timeline-content {
+    background: #ffffff;
 }
 
 .fact strong,
@@ -329,7 +338,7 @@ body pre {
 .timeline-item::before {
     content: '';
     position: absolute;
-    left: 44px;
+    left: 50px;
     top: 18px;
     width: 12px;
     height: 12px;
@@ -337,11 +346,12 @@ body pre {
     background: #5B9BD5;
     border: 3px solid #fff;
     box-shadow: 0 0 0 1px #999999;
+    transform: translate(-50%, -50%);
 }
 
 .timeline-date {
     position: absolute;
-    left: -10px;
+    left: 10px;
     top: 18px;
     transform: translateY(-50%);
     font-size: 12px;
@@ -351,7 +361,11 @@ body pre {
     text-orientation: mixed;
     line-height: 1.2;
     font-family: Helvetica, Arial, sans-serif;
-    width: 40px;
+    width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 12px;
 }
 
 .timeline-content {
