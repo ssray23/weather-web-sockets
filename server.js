@@ -30,7 +30,8 @@ async function fetchWeatherData(city) {
 
     try {
         // Using Open-Meteo API (free, no API key required)
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=temperature_2m&timezone=auto`;
+        // Fetching multiple weather parameters
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,relative_humidity_2m,weather_code&timezone=auto`;
         
         const response = await fetch(url);
         if (!response.ok) {
@@ -40,10 +41,16 @@ async function fetchWeatherData(city) {
         const data = await response.json();
         
         if (data.current && data.current.temperature_2m !== undefined) {
-            const temperature = Math.round(data.current.temperature_2m);
+            const current = data.current;
             return {
                 city: city,
-                temp: temperature,
+                temp: Math.round(current.temperature_2m),
+                feelsLike: Math.round(current.apparent_temperature),
+                precipitation: current.precipitation ? Math.round(current.precipitation * 10) / 10 : 0,
+                windSpeed: Math.round(current.wind_speed_10m),
+                windDirection: current.wind_direction_10m,
+                humidity: current.relative_humidity_2m,
+                weatherCode: current.weather_code,
                 timestamp: new Date().toLocaleTimeString()
             };
         }
@@ -55,20 +62,61 @@ async function fetchWeatherData(city) {
     }
 }
 
+// Helper function to check if weather data has changed
+function hasWeatherChanged(oldData, newData) {
+    if (!oldData) return true; // First time, always update
+    
+    // Check if any field has changed
+    return (
+        oldData.temp !== newData.temp ||
+        oldData.feelsLike !== newData.feelsLike ||
+        oldData.precipitation !== newData.precipitation ||
+        oldData.windSpeed !== newData.windSpeed ||
+        oldData.windDirection !== newData.windDirection ||
+        oldData.humidity !== newData.humidity ||
+        oldData.weatherCode !== newData.weatherCode
+    );
+}
+
 // Function to update weather for a specific city
 async function updateCityWeather(city) {
     const weatherUpdate = await fetchWeatherData(city);
     if (weatherUpdate) {
-        // Only emit if temperature changed
-        if (weatherData[city]?.temp !== weatherUpdate.temp) {
+        // Check if any weather data has changed
+        if (hasWeatherChanged(weatherData[city], weatherUpdate)) {
+            const oldData = weatherData[city];
             weatherData[city] = weatherUpdate;
             
             // WEB SOCKET MAGIC:
             // Send this update ONLY to people in this city's "room"
             io.to(city).emit('temperature_update', weatherUpdate);
-            console.log(`Weather update for ${city}: ${weatherUpdate.temp}°C`);
+            
+            // Log what changed
+            const changes = [];
+            if (oldData) {
+                if (oldData.temp !== weatherUpdate.temp) changes.push(`temp: ${oldData.temp}→${weatherUpdate.temp}°C`);
+                if (oldData.feelsLike !== weatherUpdate.feelsLike) changes.push(`feels: ${oldData.feelsLike}→${weatherUpdate.feelsLike}°C`);
+                if (oldData.windSpeed !== weatherUpdate.windSpeed) changes.push(`wind: ${oldData.windSpeed}→${weatherUpdate.windSpeed} km/h`);
+                if (oldData.humidity !== weatherUpdate.humidity) changes.push(`humidity: ${oldData.humidity}→${weatherUpdate.humidity}%`);
+            }
+            console.log(`Weather update for ${city}: ${changes.length > 0 ? changes.join(', ') : 'initial data'}`);
         }
     }
+}
+
+// Get list of cities that have active subscribers (sockets in rooms)
+function getSubscribedCities() {
+    const rooms = io.sockets.adapter.rooms;
+    const subscribedCities = [];
+    
+    for (const city of Object.keys(cityCoordinates)) {
+        const room = rooms.get(city);
+        if (room && room.size > 0) {
+            subscribedCities.push(city);
+        }
+    }
+    
+    return subscribedCities;
 }
 
 // SOCKET CONNECTION LOGIC
@@ -107,28 +155,22 @@ io.on('connection', async (socket) => {
 });
 
 // REAL WEATHER UPDATE LOGIC
-// Fetch real weather data every 5 minutes (300000ms)
+// Fetch real weather data every 5 minutes (300000ms) for subscribed cities only
 // Weather doesn't change as frequently as simulated data
 setInterval(async () => {
-    const cities = Object.keys(cityCoordinates);
+    const subscribedCities = getSubscribedCities();
     
-    console.log('Fetching weather updates for all cities...');
-    for (const city of cities) {
-        await updateCityWeather(city);
-        // Small delay between API calls to be respectful
-        await new Promise(resolve => setTimeout(resolve, 500));
+    if (subscribedCities.length > 0) {
+        console.log(`Fetching weather updates for subscribed cities: ${subscribedCities.join(', ')}`);
+        for (const city of subscribedCities) {
+            await updateCityWeather(city);
+            // Small delay between API calls to be respectful
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    } else {
+        console.log('No active subscriptions, skipping weather fetch');
     }
 }, 300000); // 5 minutes
-
-// Initial fetch on server start
-(async () => {
-    console.log('Fetching initial weather data...');
-    const cities = Object.keys(cityCoordinates);
-    for (const city of cities) {
-        await updateCityWeather(city);
-        await new Promise(resolve => setTimeout(resolve, 500));
-    }
-})();
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

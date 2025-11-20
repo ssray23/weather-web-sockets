@@ -143,6 +143,48 @@
                 border-color: #b0b0b0;
             } 
         }
+        
+        .weather-details {
+            margin: 20px 0;
+            padding: 20px;
+            background: #e8e8e8;
+            border-radius: 12px;
+            border: 2px solid #b0b0b0;
+        }
+        
+        .weather-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            justify-content: space-between;
+        }
+        
+        .weather-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .weather-item {
+            flex: 1;
+            padding: 12px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #c0c0c0;
+        }
+        
+        .weather-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .weather-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c2c2c;
+        }
     </style>
 </head>
 <body>
@@ -159,6 +201,36 @@
         </select>
 
         <div id="display" class="temp-display">--°C</div>
+        
+        <div id="weatherDetails" class="weather-details" style="display: none;">
+            <div class="weather-row">
+                <div class="weather-item">
+                    <div class="weather-label">Feels Like</div>
+                    <div class="weather-value" id="feelsLike">--°C</div>
+                </div>
+                <div class="weather-item">
+                    <div class="weather-label">Humidity</div>
+                    <div class="weather-value" id="humidity">--%</div>
+                </div>
+            </div>
+            <div class="weather-row">
+                <div class="weather-item">
+                    <div class="weather-label">Wind Speed</div>
+                    <div class="weather-value" id="windSpeed">-- km/h</div>
+                </div>
+                <div class="weather-item">
+                    <div class="weather-label">Wind Direction</div>
+                    <div class="weather-value" id="windDirection">--°</div>
+                </div>
+            </div>
+            <div class="weather-row">
+                <div class="weather-item">
+                    <div class="weather-label">Precipitation</div>
+                    <div class="weather-value" id="precipitation">-- mm</div>
+                </div>
+            </div>
+        </div>
+        
         <p>Live Server Logs:</p>
         <div id="logs" class="log"></div>
     </div>
@@ -173,6 +245,12 @@
         const tempDisplay = document.getElementById('display');
         const logBox = document.getElementById('logs');
         const statusSpan = document.getElementById('status');
+        const weatherDetails = document.getElementById('weatherDetails');
+        const feelsLikeEl = document.getElementById('feelsLike');
+        const humidityEl = document.getElementById('humidity');
+        const windSpeedEl = document.getElementById('windSpeed');
+        const windDirectionEl = document.getElementById('windDirection');
+        const precipitationEl = document.getElementById('precipitation');
 
         // 1. Check connection status
         socket.on('connect', () => {
@@ -200,9 +278,29 @@
             void tempDisplay.offsetWidth; // Trigger reflow to restart animation
             tempDisplay.classList.add('highlight');
 
+            // Update weather details
+            if (data.feelsLike !== undefined) {
+                weatherDetails.style.display = 'block';
+                feelsLikeEl.textContent = `${data.feelsLike}°C`;
+                humidityEl.textContent = `${data.humidity}%`;
+                windSpeedEl.textContent = `${data.windSpeed} km/h`;
+                windDirectionEl.textContent = `${getWindDirection(data.windDirection)} (${data.windDirection}°)`;
+                precipitationEl.textContent = `${data.precipitation} mm`;
+            }
+
             // Update logs
-            addLog(`[${data.timestamp}] Update: ${data.city} is now ${data.temp}°C`);
+            const details = data.feelsLike !== undefined 
+                ? `, Feels: ${data.feelsLike}°C, Wind: ${data.windSpeed} km/h, Humidity: ${data.humidity}%`
+                : '';
+            addLog(`[${data.timestamp}] Update: ${data.city} is now ${data.temp}°C${details}`);
         });
+
+        // Helper function to convert wind direction degrees to compass direction
+        function getWindDirection(degrees) {
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            const index = Math.round(degrees / 22.5) % 16;
+            return directions[index];
+        }
 
         function addLog(msg) {
             const div = document.createElement('div');
