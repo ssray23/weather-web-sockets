@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSockets Architecture - Weather Application</title>
+    <link rel="stylesheet" href="A4.css">
+</head>
+<body>
+    <div class="a4">
+        <h1>WebSockets Architecture Documentation</h1>
+        <h2>Live Weather Application Example</h2>
+
+        <div class="card">
+            <h2>What are WebSockets?</h2>
+            <p><strong>WebSockets</strong> are a communication protocol that enables persistent, bidirectional communication between a client (browser) and a server over a single TCP connection. Unlike traditional HTTP requests, which follow a request-response pattern, WebSockets allow both the client and server to initiate data exchange at any time.</p>
+            
+            <div class="fact">
+                <strong>Key Advantage:</strong> WebSockets provide real-time, low-latency communication without the overhead of repeatedly establishing new connections for each message.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Traditional HTTP vs WebSockets</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>HTTP (Request-Response)</th>
+                        <th>WebSockets</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Connection Type</strong></td>
+                        <td>Stateless - each request requires a new connection</td>
+                        <td>Persistent - single connection remains open</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Communication</strong></td>
+                        <td>Unidirectional - client requests, server responds</td>
+                        <td>Bidirectional - both can send messages anytime</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Real-time Updates</strong></td>
+                        <td>Requires polling (repeated requests)</td>
+                        <td>Server can push updates immediately</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Overhead</strong></td>
+                        <td>High - HTTP headers on every request</td>
+                        <td>Low - minimal framing after handshake</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Use Cases</strong></td>
+                        <td>Web pages, APIs, static content</td>
+                        <td>Chat apps, live notifications, gaming, IoT</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>How WebSockets Work</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">1</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">HTTP Handshake</div>
+                        <div class="timeline-description">Client sends an HTTP request with an "Upgrade: websocket" header. The server responds with a 101 Switching Protocols status, completing the WebSocket handshake.</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">2</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Persistent Connection</div>
+                        <div class="timeline-description">The TCP connection stays open after the handshake, allowing both client and server to send messages without the overhead of HTTP headers.</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">3</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Bidirectional Messaging</div>
+                        <div class="timeline-description">Either side can send data frames at any time. Messages are lightweight and can contain text or binary data.</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">4</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Connection Management</div>
+                        <div class="timeline-description">Connection can be closed by either party. Socket.io automatically handles reconnection, heartbeat/ping messages, and connection state management.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Socket.io: WebSocket Abstraction Library</h2>
+            <p><strong>Socket.io</strong> is a popular JavaScript library that simplifies WebSocket implementation. It provides:</p>
+            
+            <ul>
+                <li><strong>Automatic fallbacks:</strong> Falls back to HTTP long-polling if WebSockets aren't available</li>
+                <li><strong>Room management:</strong> Allows organizing clients into groups (rooms) for targeted messaging</li>
+                <li><strong>Event-based API:</strong> Simple <code>emit()</code> and <code>on()</code> methods for sending/receiving messages</li>
+                <li><strong>Reconnection handling:</strong> Automatically reconnects if connection is lost</li>
+                <li><strong>Cross-browser compatibility:</strong> Works across different browsers and devices</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Weather Application Architecture</h2>
+            <p>This live weather application demonstrates WebSockets in a practical context. Here's how it works:</p>
+
+            <h3>System Components</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Technology</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Server</strong></td>
+                        <td>Node.js + Express</td>
+                        <td>Hosts HTTP server and manages WebSocket connections</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WebSocket Library</strong></td>
+                        <td>Socket.io (Server)</td>
+                        <td>Handles WebSocket connections and room management</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Client</strong></td>
+                        <td>HTML + JavaScript</td>
+                        <td>Browser interface that connects to WebSocket server</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WebSocket Library</strong></td>
+                        <td>Socket.io (Client)</td>
+                        <td>Connects to server and handles real-time updates</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weather API</strong></td>
+                        <td>Open-Meteo API</td>
+                        <td>External service providing real weather data</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Application Flow</h2>
+            
+            <h3>Step 1: Server Initialization</h3>
+            <pre><code>const express = require('express');
+const http = require('http');
+const { Server } = require("socket.io");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);</code></pre>
+            <p>The server creates an HTTP server and attaches Socket.io to it. The server listens for WebSocket upgrade requests on the same port.</p>
+
+            <h3>Step 2: Client Connection</h3>
+            <pre><code>// Client-side (browser)
+const socket = io(); // Connects to same origin server
+
+socket.on('connect', () => {
+    console.log('Connected!', socket.id);
+});</code></pre>
+            <p>When the browser loads, Socket.io automatically initiates the WebSocket handshake. Once connected, the client receives a unique socket ID.</p>
+
+            <h3>Step 3: City Subscription (Room Management)</h3>
+            <pre><code>// Client emits subscription request
+socket.emit('subscribe_city', 'London');
+
+// Server handles subscription
+socket.on('subscribe_city', (city) => {
+    socket.join(city); // Joins a "room" for this city
+});</code></pre>
+            
+            <div class="fact">
+                <strong>Room Concept:</strong> Socket.io "rooms" are logical groupings of sockets. When a client subscribes to "London", they join the "London" room. The server can then send updates to all sockets in that room with <code>io.to('London').emit(...)</code>.
+            </div>
+
+            <h3>Step 4: Weather Data Fetching</h3>
+            <pre><code>// Server fetches weather from external API
+async function fetchWeatherData(city) {
+    const coords = cityCoordinates[city];
+    const url = `https://api.open-meteo.com/v1/forecast?...`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return { city, temp: data.current.temperature_2m };
+}</code></pre>
+            <p>The server periodically fetches real weather data from the Open-Meteo API every 5 minutes. This keeps the data current without overwhelming the external service.</p>
+
+            <h3>Step 5: Real-time Update Distribution</h3>
+            <pre><code>// Server broadcasts to specific room
+io.to(city).emit('temperature_update', {
+    city: 'London',
+    temp: 15,
+    timestamp: '14:30:00'
+});
+
+// Client receives update
+socket.on('temperature_update', (data) => {
+    tempDisplay.textContent = `${data.temp}°C`;
+});</code></pre>
+            <p>When weather data changes, the server sends updates only to clients subscribed to that specific city. This targeted approach is more efficient than broadcasting to everyone.</p>
+        </div>
+
+        <div class="card">
+            <h2>Key Features Demonstrated</h2>
+            
+            <div class="stat-grid">
+                <div class="stat">
+                    <div class="big">Real-time</div>
+                    <div class="sub">Instant updates without page refresh. Temperature changes appear immediately on all connected clients.</div>
+                </div>
+                <div class="stat">
+                    <div class="big">Rooms</div>
+                    <div class="sub">Clients subscribe to specific cities. Updates are sent only to relevant subscribers, not everyone.</div>
+                </div>
+                <div class="stat">
+                    <div class="big">Bidirectional</div>
+                    <div class="sub">Client can send subscription requests. Server can push updates proactively without waiting for requests.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Communication Patterns</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event Name</th>
+                        <th>Direction</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>connect</code></td>
+                        <td>Server → Client</td>
+                        <td>Automatic event when WebSocket connection is established</td>
+                    </tr>
+                    <tr>
+                        <td><code>subscribe_city</code></td>
+                        <td>Client → Server</td>
+                        <td>Client requests to receive updates for a specific city</td>
+                    </tr>
+                    <tr>
+                        <td><code>temperature_update</code></td>
+                        <td>Server → Client</td>
+                        <td>Server sends weather updates to subscribed clients</td>
+                    </tr>
+                    <tr>
+                        <td><code>disconnect</code></td>
+                        <td>Either</td>
+                        <td>Triggered when connection is closed</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Benefits of This Architecture</h2>
+            
+            <ul>
+                <li><strong>Efficient:</strong> Only sends updates when data actually changes, not on a fixed polling interval</li>
+                <li><strong>Scalable:</strong> Room-based messaging ensures clients only receive relevant updates</li>
+                <li><strong>Low Latency:</strong> No HTTP overhead - messages arrive instantly</li>
+                <li><strong>User Experience:</strong> No need to refresh the page - updates appear automatically</li>
+                <li><strong>Resource Friendly:</strong> Single persistent connection per client instead of many HTTP requests</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Use Cases for WebSockets</h2>
+            
+            <ul>
+                <li><strong>Chat Applications:</strong> Instant messaging between users</li>
+                <li><strong>Live Notifications:</strong> Real-time alerts and updates</li>
+                <li><strong>Collaborative Tools:</strong> Live document editing, whiteboards</li>
+                <li><strong>Financial Data:</strong> Stock prices, cryptocurrency updates</li>
+                <li><strong>Gaming:</strong> Multiplayer real-time games</li>
+                <li><strong>IoT Monitoring:</strong> Sensor data from connected devices</li>
+                <li><strong>Live Dashboards:</strong> Analytics, monitoring, system status</li>
+            </ul>
+        </div>
+
+        <div class="citations">
+            <h3>References & Resources</h3>
+            
+            <div class="citation">
+                <div class="citation-number">1</div>
+                <div class="citation-content">
+                    <div class="citation-title">Socket.io Documentation</div>
+                    <div class="citation-snippet">Official Socket.io documentation: https://socket.io/docs/</div>
+                </div>
+            </div>
+            
+            <div class="citation">
+                <div class="citation-number">2</div>
+                <div class="citation-content">
+                    <div class="citation-title">WebSocket Protocol (RFC 6455)</div>
+                    <div class="citation-snippet">The WebSocket Protocol specification: https://tools.ietf.org/html/rfc6455</div>
+                </div>
+            </div>
+            
+            <div class="citation">
+                <div class="citation-number">3</div>
+                <div class="citation-content">
+                    <div class="citation-title">Open-Meteo Weather API</div>
+                    <div class="citation-snippet">Free weather API used in this example: https://open-meteo.com/</div>
+                </div>
+            </div>
+            
+            <div class="citation">
+                <div class="citation-number">4</div>
+                <div class="citation-content">
+                    <div class="citation-title">MDN WebSockets Guide</div>
+                    <div class="citation-snippet">Comprehensive guide on WebSockets: https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="note"><em>Document generated for educational purposes. This architecture demonstrates real-time communication using WebSockets in a Node.js application.</em></p>
+    </div>
+</body>
+</html>
+
