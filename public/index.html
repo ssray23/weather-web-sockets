@@ -38,7 +38,7 @@
         select { 
             padding: 12px 16px; 
             width: 100%; 
-            font-size: 16px; 
+            font-size: 14px; 
             margin-bottom: 25px;
             border-radius: 10px;
             border: 2px solid #a0a0a0;
@@ -185,6 +185,200 @@
             font-weight: 700;
             color: #2c2c2c;
         }
+        
+        /* Fade-in animation for weather values */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        /* Fade-in with color change for changed values */
+        .fade-in-changed {
+            animation: fadeInChanged 0.6s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInChanged {
+            0% {
+                opacity: 0;
+                transform: translateY(5px);
+                color: #5B9BD5;
+            }
+            50% {
+                color: #5B9BD5;
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                color: #2c2c2c;
+            }
+        }
+        
+        /* City management styles */
+        .city-management {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e8e8e8;
+            border-radius: 10px;
+            border: 2px solid #b0b0b0;
+            text-align: left;
+        }
+        
+        .city-management h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #2c2c2c;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .city-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .city-input-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 2px solid #a0a0a0;
+            background: #ffffff;
+            color: #2c2c2c;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .city-input-group input:focus {
+            outline: none;
+            border-color: #707070;
+            box-shadow: 0 0 0 3px rgba(112, 112, 112, 0.2);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid #888;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-add {
+            background: #5B9BD5;
+            color: white;
+            border-color: #5B9BD5;
+        }
+        
+        .btn-add:hover {
+            background: #4a8bc0;
+            border-color: #4a8bc0;
+        }
+        
+        .btn-add:disabled {
+            background: #ccc;
+            border-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+            padding: 5px 12px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
+        .btn-delete:hover {
+            background: #c0392b;
+            border-color: #c0392b;
+        }
+        
+        /* Custom dropdown with delete buttons */
+        .city-selector-wrapper {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .city-options-list {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .city-option-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            background: #e8e8e8;
+            border: 1.5px solid #707070;
+            border-radius: 16px;
+            transition: all 0.2s ease;
+            font-size: 12px;
+        }
+        
+        .city-option-item:hover {
+            border-color: #505050;
+            background: #d8d8d8;
+        }
+        
+        .city-option-item.selected {
+            background: #e8e8e8;
+            border-color: #707070;
+            border-width: 2px;
+        }
+        
+        .city-option-name {
+            color: #2c2c2c;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .city-option-delete {
+            background: #707070;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        
+        .city-option-delete:hover {
+            background: #505050;
+        }
+        
+        .city-option-delete:hover {
+            background: #c0392b;
+        }
+        
     </style>
 </head>
 <body>
@@ -193,12 +387,21 @@
         <h2>🌤 Live Weather Monitor</h2>
         <p class="status">Status: <span id="status">Disconnected</span></p>
 
+        <div class="city-management">
+            <h3>📍 Manage Cities</h3>
+            <div class="city-input-group">
+                <input type="text" id="cityNameInput" placeholder="Enter city name (e.g., Paris, Tokyo)" />
+                <button class="btn btn-add" id="addCityBtn">Add City</button>
+            </div>
+            <div id="geocodingStatus" style="margin-top: 10px; font-size: 12px; color: #666; display: none;"></div>
+        </div>
+
+        <div id="citySelectorWrapper" class="city-selector-wrapper">
         <select id="citySelector">
-            <option value="" disabled selected>Select a location...</option>
-            <option value="London">London</option>
-            <option value="New York">New York</option>
-            <option value="Tokyo">Tokyo</option>
+            <option value="" disabled selected>No cities yet - add one above</option>
         </select>
+            <div id="cityOptions" class="city-options-list"></div>
+        </div>
 
         <div id="display" class="temp-display">--°C</div>
         
@@ -251,42 +454,263 @@
         const windSpeedEl = document.getElementById('windSpeed');
         const windDirectionEl = document.getElementById('windDirection');
         const precipitationEl = document.getElementById('precipitation');
+        const cityNameInput = document.getElementById('cityNameInput');
+        const addCityBtn = document.getElementById('addCityBtn');
+        const geocodingStatus = document.getElementById('geocodingStatus');
+        
+        // Store previous weather data to detect changes
+        let previousWeatherData = {};
+        
+        // Function to trigger fade-in animation with change detection
+        function fadeIn(element, changed = false) {
+            element.classList.remove('fade-in', 'fade-in-changed');
+            void element.offsetWidth; // Trigger reflow
+            if (changed) {
+                element.classList.add('fade-in-changed');
+            } else {
+                element.classList.add('fade-in');
+            }
+        }
+        
+        // Function to update city selector and cities list with delete buttons
+        function updateCitySelector(cities) {
+            const currentSelection = citySelector.value;
+            
+            // Update dropdown
+            if (cities.length === 0) {
+                citySelector.innerHTML = '<option value="" disabled selected>No cities yet - add one above</option>';
+            } else {
+                citySelector.innerHTML = '<option value="" disabled selected>Select a location...</option>';
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    citySelector.appendChild(option);
+                });
+                
+                // Restore selection if it still exists
+                if (currentSelection && cities.includes(currentSelection)) {
+                    citySelector.value = currentSelection;
+                }
+            }
+            
+            // Update cities list with delete buttons in dropdown style
+            const cityOptions = document.getElementById('cityOptions');
+            cityOptions.innerHTML = '';
+            
+            if (cities.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.textContent = 'No cities. Add one above.';
+                emptyMsg.style.cssText = 'text-align: center; color: #999; font-size: 12px; padding: 5px; font-style: italic;';
+                cityOptions.appendChild(emptyMsg);
+                return;
+            }
+            
+            cities.forEach(city => {
+                const cityItem = document.createElement('div');
+                cityItem.className = 'city-option-item';
+                if (currentSelection === city) {
+                    cityItem.classList.add('selected');
+                }
+                
+                const cityName = document.createElement('span');
+                cityName.className = 'city-option-name';
+                cityName.textContent = city;
+                cityName.onclick = () => {
+                    citySelector.value = city;
+                    citySelector.dispatchEvent(new Event('change'));
+                };
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'city-option-delete';
+                deleteBtn.textContent = '✕';
+                deleteBtn.title = `Delete ${city}`;
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    socket.emit('delete_city', city);
+                };
+                
+                cityItem.appendChild(cityName);
+                cityItem.appendChild(deleteBtn);
+                cityOptions.appendChild(cityItem);
+            });
+        }
+        
 
         // 1. Check connection status
         socket.on('connect', () => {
             statusSpan.textContent = "Connected (ID: " + socket.id + ")";
             statusSpan.style.color = "#2d5a2d";
             statusSpan.style.backgroundColor = "#d0e8d0";
+            socket.emit('get_cities');
+        });
+        
+        // Receive cities list from server
+        socket.on('cities_list', (cities) => {
+            updateCitySelector(cities);
         });
 
-        // 2. Handle user selection
+        // 2. Handle user selection - only one city at a time
         citySelector.addEventListener('change', (e) => {
             const city = e.target.value;
+            
+            // Update visual selection in the city options list
+            const cityOptions = document.querySelectorAll('.city-option-item');
+            cityOptions.forEach(item => {
+                const cityName = item.querySelector('.city-option-name').textContent;
+                if (cityName === city) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+            
+            if (city) {
             addLog(`Subscribing to updates for ${city}...`);
-            
-            // Emit event to server to join the specific room
-            socket.emit('subscribe_city', city);
+                socket.emit('subscribe_city', city);
+            }
         });
-
-        // 3. Listen for real-time updates from server
-        socket.on('temperature_update', (data) => {
-            // Update visual temperature
-            tempDisplay.textContent = `${data.temp}°C`;
+        
+        // Function to add city
+        function addCity() {
+            const cityName = cityNameInput.value.trim();
             
-            // Add a visual "flash" effect
-            tempDisplay.classList.remove('highlight');
-            void tempDisplay.offsetWidth; // Trigger reflow to restart animation
-            tempDisplay.classList.add('highlight');
+            // Validate city name
+            if (!cityName || cityName.length === 0) {
+                alert('Please enter a city name');
+                cityNameInput.focus();
+                return;
+            }
+            
+            // Check city count limit (client-side check)
+            const currentCities = Array.from(citySelector.options)
+                .map(opt => opt.value)
+                .filter(v => v);
+            
+            if (currentCities.length >= 3) {
+                alert('Maximum 3 cities allowed. Please delete a city first.');
+                cityNameInput.focus();
+                return;
+            }
+            
+            // Show geocoding status
+            geocodingStatus.style.display = 'block';
+            geocodingStatus.textContent = `Searching for "${cityName}"...`;
+            geocodingStatus.style.color = '#666';
+            addCityBtn.disabled = true;
+            
+            // Send to server (server will geocode)
+            socket.emit('add_city', { name: cityName });
+        }
+        
+        // 3. Handle add city button click
+        addCityBtn.addEventListener('click', addCity);
+        
+        // Handle Enter key in city name input
+        cityNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addCity();
+            }
+        });
+        
+        // Listen for geocoding status updates
+        socket.on('geocoding', (data) => {
+            if (data.status === 'searching') {
+                geocodingStatus.textContent = `Searching for "${data.city}"...`;
+                geocodingStatus.style.color = '#666';
+            }
+        });
+        
+        // Listen for city added confirmation
+        socket.on('city_added', (city) => {
+            geocodingStatus.style.display = 'none';
+            addCityBtn.disabled = false;
+            cityNameInput.value = ''; // Clear input
+            addLog(`City "${city}" added successfully`);
+            socket.emit('get_cities'); // Refresh list
+            
+            // Automatically select and subscribe to the newly added city
+            setTimeout(() => {
+                citySelector.value = city;
+                citySelector.dispatchEvent(new Event('change'));
+            }, 100);
+        });
+        
+        // Listen for city deleted confirmation
+        socket.on('city_deleted', (city) => {
+            addLog(`City "${city}" deleted`);
+            if (citySelector.value === city) {
+                citySelector.value = '';
+                // Clear weather display if subscribed city was deleted
+                tempDisplay.textContent = '--°C';
+                weatherDetails.style.display = 'none';
+            }
+            socket.emit('get_cities'); // Refresh list
+        });
+        
+        // Listen for notification when subscribed city is deleted
+        socket.on('city_deleted_active', (city) => {
+            addLog(`Warning: "${city}" was deleted. Please select another city.`);
+            if (citySelector.value === city) {
+                citySelector.value = '';
+                tempDisplay.textContent = '--°C';
+                weatherDetails.style.display = 'none';
+            }
+        });
+        
+        socket.on('error', (message) => {
+            geocodingStatus.style.display = 'block';
+            geocodingStatus.textContent = message;
+            geocodingStatus.style.color = '#e74c3c';
+            addCityBtn.disabled = false;
+            addLog(`Error: ${message}`);
+        });
+        
+        // 4. Listen for real-time updates from server
+        socket.on('temperature_update', (data) => {
+            // Check if temperature changed
+            const tempChanged = previousWeatherData.temp !== undefined && previousWeatherData.temp !== data.temp;
+            
+            // Update visual temperature with fade-in
+            tempDisplay.textContent = `${data.temp}°C`;
+            fadeIn(tempDisplay, tempChanged);
 
-            // Update weather details
+            // Update weather details with fade-in and change detection
             if (data.feelsLike !== undefined) {
                 weatherDetails.style.display = 'block';
+                
+                // Check if each value changed
+                const feelsLikeChanged = previousWeatherData.feelsLike !== undefined && previousWeatherData.feelsLike !== data.feelsLike;
+                const humidityChanged = previousWeatherData.humidity !== undefined && previousWeatherData.humidity !== data.humidity;
+                const windSpeedChanged = previousWeatherData.windSpeed !== undefined && previousWeatherData.windSpeed !== data.windSpeed;
+                const windDirectionChanged = previousWeatherData.windDirection !== undefined && previousWeatherData.windDirection !== data.windDirection;
+                const precipitationChanged = previousWeatherData.precipitation !== undefined && previousWeatherData.precipitation !== data.precipitation;
+                
                 feelsLikeEl.textContent = `${data.feelsLike}°C`;
+                fadeIn(feelsLikeEl, feelsLikeChanged);
+                
                 humidityEl.textContent = `${data.humidity}%`;
+                fadeIn(humidityEl, humidityChanged);
+                
                 windSpeedEl.textContent = `${data.windSpeed} km/h`;
+                fadeIn(windSpeedEl, windSpeedChanged);
+                
                 windDirectionEl.textContent = `${getWindDirection(data.windDirection)} (${data.windDirection}°)`;
+                fadeIn(windDirectionEl, windDirectionChanged);
+                
                 precipitationEl.textContent = `${data.precipitation} mm`;
+                fadeIn(precipitationEl, precipitationChanged);
             }
+
+            // Store current data as previous for next comparison
+            previousWeatherData = {
+                temp: data.temp,
+                feelsLike: data.feelsLike,
+                humidity: data.humidity,
+                windSpeed: data.windSpeed,
+                windDirection: data.windDirection,
+                precipitation: data.precipitation
+            };
 
             // Update logs
             const details = data.feelsLike !== undefined 

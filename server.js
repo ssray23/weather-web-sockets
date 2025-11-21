@@ -11,14 +11,41 @@ const io = new Server(server);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // City coordinates for Open-Meteo API
-const cityCoordinates = {
-    'London': { latitude: 51.5074, longitude: -0.1278 },
-    'New York': { latitude: 40.7128, longitude: -74.0060 },
-    'Tokyo': { latitude: 35.6762, longitude: 139.6503 }
-};
+// Start with empty - users will add cities as needed
+const cityCoordinates = {};
 
 // Cache for weather data
 let weatherData = {};
+
+// Function to geocode city name to coordinates using Open-Meteo Geocoding API
+async function geocodeCity(cityName) {
+    try {
+        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`;
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+            const result = data.results[0];
+            return {
+                name: result.name,
+                latitude: result.latitude,
+                longitude: result.longitude,
+                country: result.country || '',
+                admin1: result.admin1 || '' // State/Province
+            };
+        }
+        
+        return null;
+    } catch (error) {
+        console.error(`Error geocoding city "${cityName}":`, error.message);
+        return null;
+    }
+}
 
 // Function to fetch real weather data from Open-Meteo API
 async function fetchWeatherData(city) {
@@ -79,28 +106,27 @@ function hasWeatherChanged(oldData, newData) {
 }
 
 // Function to update weather for a specific city
+// Always sends update (even if values are the same) to trigger fade-in animations
 async function updateCityWeather(city) {
     const weatherUpdate = await fetchWeatherData(city);
     if (weatherUpdate) {
-        // Check if any weather data has changed
-        if (hasWeatherChanged(weatherData[city], weatherUpdate)) {
-            const oldData = weatherData[city];
-            weatherData[city] = weatherUpdate;
-            
-            // WEB SOCKET MAGIC:
-            // Send this update ONLY to people in this city's "room"
-            io.to(city).emit('temperature_update', weatherUpdate);
-            
-            // Log what changed
-            const changes = [];
-            if (oldData) {
-                if (oldData.temp !== weatherUpdate.temp) changes.push(`temp: ${oldData.temp}→${weatherUpdate.temp}°C`);
-                if (oldData.feelsLike !== weatherUpdate.feelsLike) changes.push(`feels: ${oldData.feelsLike}→${weatherUpdate.feelsLike}°C`);
-                if (oldData.windSpeed !== weatherUpdate.windSpeed) changes.push(`wind: ${oldData.windSpeed}→${weatherUpdate.windSpeed} km/h`);
-                if (oldData.humidity !== weatherUpdate.humidity) changes.push(`humidity: ${oldData.humidity}→${weatherUpdate.humidity}%`);
-            }
-            console.log(`Weather update for ${city}: ${changes.length > 0 ? changes.join(', ') : 'initial data'}`);
+        const oldData = weatherData[city];
+        weatherData[city] = weatherUpdate;
+        
+        // WEB SOCKET MAGIC:
+        // Send this update ONLY to people in this city's "room"
+        // Always emit (even if same values) to trigger fade-in animations
+        io.to(city).emit('temperature_update', weatherUpdate);
+        
+        // Log what changed
+        const changes = [];
+        if (oldData) {
+            if (oldData.temp !== weatherUpdate.temp) changes.push(`temp: ${oldData.temp}→${weatherUpdate.temp}°C`);
+            if (oldData.feelsLike !== weatherUpdate.feelsLike) changes.push(`feels: ${oldData.feelsLike}→${weatherUpdate.feelsLike}°C`);
+            if (oldData.windSpeed !== weatherUpdate.windSpeed) changes.push(`wind: ${oldData.windSpeed}→${weatherUpdate.windSpeed} km/h`);
+            if (oldData.humidity !== weatherUpdate.humidity) changes.push(`humidity: ${oldData.humidity}→${weatherUpdate.humidity}%`);
         }
+        console.log(`Weather update for ${city}: ${changes.length > 0 ? changes.join(', ') : 'no changes (update sent for animation)'}`);
     }
 }
 
@@ -123,8 +149,16 @@ function getSubscribedCities() {
 io.on('connection', async (socket) => {
     console.log('A user connected:', socket.id);
 
+    // Send current cities list on connection
+    socket.emit('cities_list', Object.keys(cityCoordinates));
+
     // 1. Listen for the client selecting a city
     socket.on('subscribe_city', async (city) => {
+        if (!city || !cityCoordinates[city]) {
+            socket.emit('error', `City "${city}" not found. Please select a valid city from the list.`);
+            return;
+        }
+
         // Leave all other rooms (cleanup) so they don't get mixed updates
         socket.rooms.forEach((room) => {
             if (room !== socket.id) socket.leave(room);
@@ -149,13 +183,108 @@ io.on('connection', async (socket) => {
         }
     });
 
+    // 2. Handle add city request
+    socket.on('add_city', async (data) => {
+        const { name } = data;
+        
+        // Validate input data
+        if (!name || typeof name !== 'string' || name.trim().length === 0) {
+            socket.emit('error', 'City name is required and must be a valid string');
+            return;
+        }
+        
+        const trimmedName = name.trim();
+
+        // Check city count limit (max 3 cities)
+        const currentCityCount = Object.keys(cityCoordinates).length;
+        if (currentCityCount >= 3) {
+            socket.emit('error', 'Maximum 3 cities allowed. Please delete a city first.');
+            return;
+        }
+
+        // Check if city already exists (case-insensitive check)
+        const existingCity = Object.keys(cityCoordinates).find(
+            city => city.toLowerCase() === trimmedName.toLowerCase()
+        );
+        
+        if (existingCity) {
+            socket.emit('error', `City "${existingCity}" already exists. Please use a different name.`);
+            return;
+        }
+
+        // Geocode the city name to get coordinates
+        socket.emit('geocoding', { status: 'searching', city: trimmedName });
+        const geocodeResult = await geocodeCity(trimmedName);
+        
+        if (!geocodeResult) {
+            socket.emit('error', `Could not find coordinates for "${trimmedName}". Please check the city name and try again.`);
+            return;
+        }
+
+        // Use the geocoded name (might be slightly different, e.g., "New York" -> "New York City")
+        const finalCityName = geocodeResult.name;
+        
+        // Check again if the geocoded name already exists
+        if (cityCoordinates[finalCityName]) {
+            socket.emit('error', `City "${finalCityName}" already exists.`);
+            return;
+        }
+
+        // Add city with geocoded coordinates
+        cityCoordinates[finalCityName] = { 
+            latitude: geocodeResult.latitude, 
+            longitude: geocodeResult.longitude 
+        };
+        
+        const locationInfo = geocodeResult.admin1 
+            ? `${finalCityName}, ${geocodeResult.admin1}, ${geocodeResult.country}`
+            : `${finalCityName}, ${geocodeResult.country}`;
+        
+        console.log(`City "${finalCityName}" added with coordinates (${geocodeResult.latitude}, ${geocodeResult.longitude}) - ${locationInfo}`);
+        
+        // Broadcast to all clients
+        io.emit('city_added', finalCityName);
+        io.emit('cities_list', Object.keys(cityCoordinates));
+    });
+
+    // 3. Handle delete city request
+    socket.on('delete_city', (cityName) => {
+        if (!cityCoordinates[cityName]) {
+            socket.emit('error', `City "${cityName}" not found`);
+            return;
+        }
+
+        // Allow deletion even if there are active subscribers
+        // If user is subscribed to deleted city, they'll need to select another
+        const rooms = io.sockets.adapter.rooms;
+        const room = rooms.get(cityName);
+        if (room && room.size > 0) {
+            // Notify subscribers that their city was deleted
+            io.to(cityName).emit('city_deleted_active', cityName);
+        }
+
+        // Delete city
+        delete cityCoordinates[cityName];
+        delete weatherData[cityName];
+        console.log(`City "${cityName}" deleted`);
+        
+        // Broadcast to all clients
+        io.emit('city_deleted', cityName);
+        io.emit('cities_list', Object.keys(cityCoordinates));
+    });
+
+    // 4. Handle get cities request
+    socket.on('get_cities', () => {
+        socket.emit('cities_list', Object.keys(cityCoordinates));
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected');
     });
 });
 
 // REAL WEATHER UPDATE LOGIC
-// Fetch real weather data every 5 minutes (300000ms) for subscribed cities only
+// Fetch real weather data every 0.5 minutes (30000ms) for subscribed cities only
 // Weather doesn't change as frequently as simulated data
 setInterval(async () => {
     const subscribedCities = getSubscribedCities();
@@ -170,7 +299,7 @@ setInterval(async () => {
     } else {
         console.log('No active subscriptions, skipping weather fetch');
     }
-}, 300000); // 5 minutes
+}, 30000); // 0.5 minutes
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

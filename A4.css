@@ -218,40 +218,45 @@ body table tbody tr:nth-child(even) {
     background: #F5F5F5;
 }
 
-.a4 pre,
-body pre {
-    background: #F7F7F7;
-}
-
 /* Conditional fills: nested containers inside light gray should be white */
 /* This must come AFTER general pre rules to override them */
 /* Note: Table rows maintain their alternate coloring even inside gray parents */
 .fact .fact,
 .fact .card,
 .fact .stat,
-.fact pre,
 .fact .timeline-content,
 .card .fact,
 .card .card,
 .card .stat,
-.card pre,
 .card .timeline-content,
 .stat .fact,
 .stat .card,
 .stat .stat,
-.stat pre,
 .stat .timeline-content,
 .citations .fact,
 .citations .card,
 .citations .stat,
-.citations pre,
 .citations .timeline-content,
 .timeline-content .fact,
 .timeline-content .card,
 .timeline-content .stat,
-.timeline-content pre,
 .timeline-content .timeline-content {
     background: #ffffff;
+}
+
+/* Code blocks inside gray containers (.fact, .card) should be light gray for better contrast */
+.fact pre,
+.card pre,
+.stat pre,
+.citations pre,
+.timeline-content pre {
+    background: #FFFFFF;
+}
+
+/* Code blocks directly in white parents should be light gray */
+.a4 > pre,
+body > pre {
+    background: #F5F5F5;
 }
 
 .fact strong,
